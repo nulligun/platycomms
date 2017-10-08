@@ -117,7 +117,7 @@ Return
 
 TriggerVoice(command)
 {
-  global ServerName, PlayerName, SecretKey
+  global ServerName, PlayerName, SecretKey, EndPoint
   oHttp := ComObjCreate("WinHttp.Winhttprequest.5.1")
   oHttp.open("GET", EndPoint . "?server_name=" . ServerName . "&player_name=" . PlayerName . "&secret_key=" . SecretKey . "&command=" . command)
   oHttp.send()
