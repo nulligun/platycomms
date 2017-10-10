@@ -3,26 +3,34 @@
 
 ; Put a semi colon (;) in front of the line to disable it
 
-; NOTE: if you are typing in text chat, the binds will trigger the voice chat. You can SUSPEND the bot by pressing F9, and then press it again to re-enable
- 
-JumpCheckKey = H
-ItsMeKey = J
-HelloKey = L
-SuspendKey = F9
+; NOTE: if you are typing in text chat, the binds could trigger the voice chat. You can SUSPEND the bot by pressing F9, and then press it again to re-enable
 
-ImDownKey = Numpad7
-ImDeadKey = Numpad8
-HesDownKey = Numpad1
-HesDeadKey = Numpad3
+; The asterix in front of each keybind means ANY modifier can be used while you press the key, so if you are holding shift it will still work.
+; For a list of all modifiers see this link:
+; https://autohotkey.com/docs/Hotkeys.htm#Symbols
+; * = All modifiers
+; ! = Alt
+; ^ = Control
+; + = Shift
 
-NorthKey = Numpad8
-SouthKey = Numpad2
-EastKey = Numpad6
-WestKey = Numpad4
+JumpCheckKey = *H
+ItsMeKey = *J
+HelloKey = *L
+SuspendKey = *F9
 
-HelloKey = NumpadEnter
-Yes = Numpad0
-No = NumpadDot
+ImDownKey = *Numpad7
+ImDeadKey = *Numpad8
+HesDownKey = *Numpad1
+HesDeadKey = *Numpad3
+
+NorthKey = *Numpad8
+SouthKey = *Numpad2
+EastKey = *Numpad6
+WestKey = *Numpad4
+
+HelloKey = *NumpadEnter
+Yes = *Numpad0
+No = *NumpadDot
 
 ; These probably should not be changed, unless you know what you are doing
 ServerName := "Fruit Cup Fucks"
@@ -32,21 +40,21 @@ EndPoint := "https://www.dandelopia.com/plat/web/client.php"
 
 ; The rest of this is code, no need to change anything down here
 
-HotKey,~*%SuspendKey%,DoSuspend
+HotKey,~%SuspendKey%,DoSuspend
 Hotkey, IfWinActive, Rust
-HotKey,~*%JumpCheckKey%,DoJumpCheck
-HotKey,~*%ItsMeKey%,DoItsMe
-HotKey,~*%ImDownKey%,DoImDown
-HotKey,~*%ImDeadKey%,DoImDead
-HotKey,~*%HesDownKey%,DoHesDown
-HotKey,~*%HesDeadKey%,DoHesDead
-HotKey,~*%NorthKey%,DoNorth
-HotKey,~*%SouthKey%,DoSouth
-HotKey,~*%EastKey%,DoEast
-HotKey,~*%WestKey%,DoWest
-HotKey,~*%HelloKey%,DoHello
-HotKey,~*%YesKey%,DoYes
-HotKey,~*%NoKey%,DoNo
+HotKey,~%JumpCheckKey%,DoJumpCheck
+HotKey,~%ItsMeKey%,DoItsMe
+HotKey,~%ImDownKey%,DoImDown
+HotKey,~%ImDeadKey%,DoImDead
+HotKey,~%HesDownKey%,DoHesDown
+HotKey,~%HesDeadKey%,DoHesDead
+HotKey,~%NorthKey%,DoNorth
+HotKey,~%SouthKey%,DoSouth
+HotKey,~%EastKey%,DoEast
+HotKey,~%WestKey%,DoWest
+HotKey,~%HelloKey%,DoHello
+HotKey,~%YesKey%,DoYes
+HotKey,~%NoKey%,DoNo
 
 DoJumpCheck:	
   TriggerVoice("jump_check")
