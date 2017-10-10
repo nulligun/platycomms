@@ -47,7 +47,8 @@ class SimpleServer(asyncio.Protocol):
     def data_received(self, data):
         print("data_received: {}".format(data.decode()))
         j = json.loads(data.decode())
-        if j['secret_key'] == 'ife923f9aj9vfj3020':
+        #if j['secret_key'] == 'ife923f9aj9vfj3020':
+        if j['secret_key'] == '123zxc':
             v = voice_channels[j['server_name']]
             members = v.voice_members
             in_channel = False
