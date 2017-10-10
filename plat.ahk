@@ -15,26 +15,26 @@
 
 JumpCheckKey = *H
 ItsMeKey = *J
-HelloKey = *L
-SuspendKey = *F9
+SuspendKey = *NumpadAdd
 
-ImDownKey = *Numpad7
-ImDeadKey = *Numpad8
-HesDownKey = *Numpad1
-HesDeadKey = *Numpad3
+ImDownKey = *NumpadHome
+ImDeadKey = *NumpadPgUp
+HesDownKey = *NumpadEnd
+HesDeadKey = *NumpadPgDn
 
-NorthKey = *Numpad8
-SouthKey = *Numpad2
-EastKey = *Numpad6
-WestKey = *Numpad4
+NorthKey = *NumpadUp
+SouthKey = *NumpadDown
+EastKey = *NumpadRight
+WestKey = *NumpadLeft
 
 HelloKey = *NumpadEnter
-Yes = *Numpad0
+Yes = *NumpadIns
 No = *NumpadDot
+CancelKey = *NumpadClear
 
 ; These probably should not be changed, unless you know what you are doing
-ServerName := "Fruit Cup Fucks"
-PlayerName := "Platypus"
+ServerName := "Minecraft Sunday"
+PlayerName := "Nulligun"
 SecretKey := "123zxc"
 EndPoint := "https://www.dandelopia.com/plat/web/client.php"
 
@@ -55,6 +55,7 @@ HotKey,~%WestKey%,DoWest
 HotKey,~%HelloKey%,DoHello
 HotKey,~%YesKey%,DoYes
 HotKey,~%NoKey%,DoNo
+HotKey,~%CancelKey%,DoNo
 
 DoJumpCheck:	
   TriggerVoice("jump_check")
@@ -108,6 +109,10 @@ DoNo:
   TriggerVoice("no")
 Return
 
+DoCancel:
+  TriggerVoice("cancel")
+Return
+
 DoSuspend:
   Suspend,Permit
   if (A_IsSuspended == 0) {
@@ -130,3 +135,4 @@ TriggerVoice(command)
   oHttp.open("GET", EndPoint . "?server_name=" . ServerName . "&player_name=" . PlayerName . "&secret_key=" . SecretKey . "&command=" . command)
   oHttp.send()
 }
+
