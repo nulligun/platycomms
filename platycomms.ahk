@@ -28,8 +28,8 @@ EastKey = *NumpadRight
 WestKey = *NumpadLeft
 
 HelloKey = *NumpadMult
-Yes = *NumpadIns
-No = *NumpadDot
+YesKey = *NumpadIns
+NoKey = *NumpadDot
 CancelKey = *NumpadClear
 AfkKey = *NumpadSub
 SteamOverlayKey = +Tab
@@ -57,12 +57,16 @@ HotKey,~%WestKey%,DoWest
 HotKey,~%HelloKey%,DoHello
 HotKey,~%YesKey%,DoYes
 HotKey,~%NoKey%,DoNo
-HotKey,~%CancelKey%,DoNo
+HotKey,~%CancelKey%,DoCancel
 HotKey,~%AfkKey%,DoAfk
 HotKey,~%SteamOverlayKey%,DoSteamOverlay
 HotKey,~*ESC,DoCloseSteamOverlay
 
 OverlayOpen := False
+
+BlankFunction:
+; this needs to be here or else DoJumpCheck runs each time the script starts lol
+Return
 
 DoJumpCheck:	
   TriggerVoice("jump_check")
