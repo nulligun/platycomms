@@ -6,6 +6,9 @@ import os
 from discord.enums import ChannelType
 import json
 from discord.ext import commands
+from configobj import ConfigObj
+
+config = ConfigObj("/home/stevemulligan/platycomms.env")
 
 #if not discord.opus.is_loaded():
     # the 'opus' library here is opus.dll on windows
@@ -34,7 +37,7 @@ async def on_ready():
     channels = client.get_all_channels()
     for channel in channels:
         if channel.type == ChannelType.voice:
-            if channel.name == 'Rust':
+            if channel.name == config['channel_name']:
                 voice_clients[channel.server.name] = await client.join_voice_channel(channel)
                 voice_channels[channel.server.name] = channel
 
@@ -48,8 +51,7 @@ class SimpleServer(asyncio.Protocol):
     def data_received(self, data):
         print("data_received: {}".format(data.decode()))
         j = json.loads(data.decode())
-        #if j['secret_key'] == 'ife923f9aj9vfj3020':
-        if j['secret_key'] == '123zxc':
+        if j['secret_key'] == config['secret_key']:
             v = voice_channels[j['server_name']]
             members = v.voice_members
             in_channel = False
@@ -75,11 +77,11 @@ class SimpleServer(asyncio.Protocol):
         clients.remove(self)
 
 
-coro = client.loop.create_server(SimpleServer, port=1234)
+coro = client.loop.create_server(SimpleServer, host='127.0.0.1', port=int(config['listen_port']) or 1234)
 server = client.loop.run_until_complete(coro)
 
 for socket in server.sockets:
     print("serving on {}".format(socket.getsockname()))
 
-client.run('MzY3NDU2MTY1MTc4NzY5NDA4.DL7rvQ.5-vzl66wbZVJLq1CI--eIS-Yt8g')
+client.run(config['token'])
 
