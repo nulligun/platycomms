@@ -27,10 +27,12 @@ SouthKey = *NumpadDown
 EastKey = *NumpadRight
 WestKey = *NumpadLeft
 
-HelloKey = *NumpadEnter
+HelloKey = *NumpadMult
 Yes = *NumpadIns
 No = *NumpadDot
 CancelKey = *NumpadClear
+AfkKey = *NumpadSub
+SteamOverlayKey = ~+Tab
 
 ; These probably should not be changed, unless you know what you are doing
 ServerName := "Minecraft Sunday"
@@ -56,6 +58,11 @@ HotKey,~%HelloKey%,DoHello
 HotKey,~%YesKey%,DoYes
 HotKey,~%NoKey%,DoNo
 HotKey,~%CancelKey%,DoNo
+HotKey,~%AfkKey%,DoAfk
+HotKey,~%SteamOverlayKey%,DoSteamOverlay
+HotKey,~*ESC,DoCloseSteamOverlay
+
+OverlayOpen := False
 
 DoJumpCheck:	
   TriggerVoice("jump_check")
@@ -113,10 +120,24 @@ DoCancel:
   TriggerVoice("cancel")
 Return
 
+DoAfk:
+  TriggerVoice("afk")
+Return
+
+DoSteamOverlay:
+  global OverlayOpen
+  OverlayOpen:= !OverlayOpen
+Return
+
+DoCloseSteamOverlay:
+  global OverlayOpen
+  OverlayOpen := False
+Return
+
 DoSuspend:
   Suspend,Permit
   if (A_IsSuspended == 0) {
-    SoundBeep, 500, 100	
+    SoundBeep, 500, 100
     SoundBeep, 400, 100
     SoundBeep, 250, 100
   }
@@ -130,9 +151,10 @@ Return
 
 TriggerVoice(command)
 {
-  global ServerName, PlayerName, SecretKey, EndPoint
-  oHttp := ComObjCreate("WinHttp.Winhttprequest.5.1")
-  oHttp.open("GET", EndPoint . "?server_name=" . ServerName . "&player_name=" . PlayerName . "&secret_key=" . SecretKey . "&command=" . command)
-  oHttp.send()
+  global ServerName, PlayerName, SecretKey, EndPoint, overlayOpen
+  if !OverlayOpen {
+    oHttp := ComObjCreate("WinHttp.Winhttprequest.5.1")
+    oHttp.open("GET", EndPoint . "?server_name=" . ServerName . "&player_name=" . PlayerName . "&secret_key=" . SecretKey . "&command=" . command)
+    oHttp.send()
+  }
 }
-
