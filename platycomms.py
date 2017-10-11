@@ -22,6 +22,7 @@ client = discord.Client()
 voice_clients = {}
 voice_channels = {}
 clients = []
+stream_player = None
 
 @client.event
 async def on_ready():
@@ -62,8 +63,12 @@ class SimpleServer(asyncio.Protocol):
                    filename = random.choice(os.listdir(folder))
                    full_path = folder + filename
                    vc = voice_clients[j['server_name']]
-                   player = vc.create_ffmpeg_player(full_path)
-                   player.start()
+                   global stream_player
+                   if stream_player is None or (stream_player is not None and not stream_player.is_playing()):
+                       stream_player = vc.create_ffmpeg_player(full_path)
+                       stream_player.start()
+                   else:
+                       print("Not playing, already busy\n")
         
     def connection_lost(self, ex):
         clients.remove(self)
@@ -75,5 +80,5 @@ server = client.loop.run_until_complete(coro)
 for socket in server.sockets:
     print("serving on {}".format(socket.getsockname()))
 
-client.run('MzY2MDAxNTg3MTY1ODU1NzU0.DLmhFw.0v3pvdGPd29zRoehFhzJ46OO6TA')
+client.run('MzY3NDU2MTY1MTc4NzY5NDA4.DL7rvQ.5-vzl66wbZVJLq1CI--eIS-Yt8g')
 
