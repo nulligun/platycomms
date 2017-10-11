@@ -76,7 +76,7 @@ class SimpleServer(asyncio.Protocol):
                     in_channel = True
                     break
             if in_channel == True:
-                if j['command'] in ['hello', 'jump_check', 'its_me', 'im_down', 'im_dead', 'hes_down', 'hes_dead', 'north', 'south', 'east', 'west', 'yes', 'no']:
+                if j['command'] in ['hello', 'jump_check', 'its_me', 'im_down', 'im_dead', 'hes_down', 'hes_dead', 'north', 'south', 'east', 'west', 'yes', 'no', 'afk', 'cancel']:
                    folder = '/var/www/dandelopia/plat/audio/' + j['command'] + '/'
                    filename = random.choice(os.listdir(folder))
                    full_path = folder + filename
