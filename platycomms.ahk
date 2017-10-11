@@ -32,7 +32,7 @@ Yes = *NumpadIns
 No = *NumpadDot
 CancelKey = *NumpadClear
 AfkKey = *NumpadSub
-SteamOverlayKey = ~+Tab
+SteamOverlayKey = +Tab
 
 ; These probably should not be changed, unless you know what you are doing
 ServerName := "Minecraft Sunday"

@@ -66,6 +66,7 @@ class SimpleServer(asyncio.Protocol):
                    global stream_player
                    if stream_player is None or (stream_player is not None and not stream_player.is_playing()):
                        stream_player = vc.create_ffmpeg_player(full_path)
+                       stream_player.volume = 0.8
                        stream_player.start()
                    else:
                        print("Not playing, already busy\n")
