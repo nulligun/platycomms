@@ -1,0 +1,28 @@
+#! /bin/sh
+
+PATHAPP="/var/www/dandelopia/plat/platycomms.py"
+PIDAPP="/var/run/platycomms.pid"
+
+start() {
+  echo "starting"
+  $(python3 $PATHAPP) &
+}
+
+stop() {
+  echo "stoping"
+  PID=$(cat $PIDAPP)
+  kill $PID
+}
+
+case $1 in 
+        start)
+                start
+        ;;
+        stop)
+                stop
+        ;;
+        restart)
+                stop
+                start
+        ;;
+esac
