@@ -1,5 +1,4 @@
 import asyncio
-import pprint
 import discord
 import random
 import os
@@ -7,6 +6,27 @@ from discord.enums import ChannelType
 import json
 from discord.ext import commands
 from configobj import ConfigObj
+import logging
+import os
+
+pid = os.getpid()
+op = open("/var/run/platycomms.pid","w")
+op.write("%s" % pid)
+op.close()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# create a file handler
+handler = logging.FileHandler('/var/log/platycomms.log')
+handler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# add the handlers to the logger
+logger.addHandler(handler)
 
 config = ConfigObj("/home/stevemulligan/platycomms.env")
 
@@ -17,7 +37,6 @@ config = ConfigObj("/home/stevemulligan/platycomms.env")
     # opus library is located in and with the proper filename.
     # note that on windows this DLL is automatically provided for you
     #discord.opus.load_opus('opus')
-    #print("Loaded opus!")
 discord.opus.load_opus('/usr/lib/x86_64-linux-gnu/libopus.so.0')
 
 client = discord.Client()
@@ -29,10 +48,7 @@ stream_player = None
 
 @client.event
 async def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('------')
+    logger.info('Logged in as %s/%s' % (client.user.name, client.user.id))
 
     channels = client.get_all_channels()
     for channel in channels:
@@ -49,7 +65,7 @@ class SimpleServer(asyncio.Protocol):
         clients.append(self)
 
     def data_received(self, data):
-        print("data_received: {}".format(data.decode()))
+        logger.info("data_received: {}".format(data.decode()))
         j = json.loads(data.decode())
         if j['secret_key'] == config['secret_key']:
             v = voice_channels[j['server_name']]
@@ -68,10 +84,16 @@ class SimpleServer(asyncio.Protocol):
                    global stream_player
                    if stream_player is None or (stream_player is not None and not stream_player.is_playing()):
                        stream_player = vc.create_ffmpeg_player(full_path)
-                       stream_player.volume = 0.8
+                       stream_player.volume = 0.6
                        stream_player.start()
                    else:
-                       print("Not playing, already busy\n")
+                       logger.info("Not playing, already busy")
+                else:
+                   logger.info("Command not found: " + j['command'])
+            else:
+                logger.info("User not in channel: " + j['player_name'])
+        else:
+            logger.info("secret key does not match: " + j['secret_key'])
         
     def connection_lost(self, ex):
         clients.remove(self)
@@ -79,9 +101,9 @@ class SimpleServer(asyncio.Protocol):
 
 coro = client.loop.create_server(SimpleServer, host='127.0.0.1', port=int(config['listen_port']) or 1234)
 server = client.loop.run_until_complete(coro)
-
+logger.info("We got port: " + config['listen_port'])
 for socket in server.sockets:
-    print("serving on {}".format(socket.getsockname()))
-
+    logger.info("serving on {}".format(socket.getsockname()))
+logger.info("invoke on otoken: " + config['token'])
 client.run(config['token'])
 
