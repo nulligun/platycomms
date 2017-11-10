@@ -30,14 +30,14 @@ logger.addHandler(handler)
 
 config = ConfigObj("/home/stevemulligan/platycomms.env")
 
-#if not discord.opus.is_loaded():
+if not discord.opus.is_loaded():
     # the 'opus' library here is opus.dll on windows
     # or libopus.so on linux in the current directory
     # you should replace this with the location the
     # opus library is located in and with the proper filename.
     # note that on windows this DLL is automatically provided for you
-    #discord.opus.load_opus('opus')
-discord.opus.load_opus('/usr/lib/x86_64-linux-gnu/libopus.so.0')
+    discord.opus.load_opus('opus')
+#discord.opus.load_opus('/usr/lib/x86_64-linux-gnu/libopus.so.0')
 
 client = discord.Client()
 
@@ -81,10 +81,12 @@ class SimpleServer(asyncio.Protocol):
                    filename = random.choice(os.listdir(folder))
                    full_path = folder + filename
                    vc = voice_clients[j['server_name']]
+                   if not vc.is_connected():
+                       logger.error("WTF dude, the voice client isn't connected, how could thishappen!")
                    global stream_player
                    if stream_player is None or (stream_player is not None and not stream_player.is_playing()):
-                       stream_player = vc.create_ffmpeg_player(full_path)
-                       stream_player.volume = 0.6
+                       stream_player = vc.create_ffmpeg_player(full_path, after=self.done_stream)
+                       stream_player.volume = 0.85
                        stream_player.start()
                    else:
                        logger.info("Not playing, already busy")
@@ -94,10 +96,25 @@ class SimpleServer(asyncio.Protocol):
                 logger.info("User not in channel: " + j['player_name'])
         else:
             logger.info("secret key does not match: " + j['secret_key'])
+
+    def done_stream(self, player):
+       if player.error is not None:
+           logger.error("ERROR: " + str(player.error)) 
+       logger.info("We are done playing the stream") 
         
     def connection_lost(self, ex):
         clients.remove(self)
 
+async def periodic():
+    while True:
+        logger.info('periodic poll keepalive')
+        for server_name, voice_client in voice_clients.items():
+            logger.info('polling ' + server_name)
+            voice_client.poll_voice_ws()
+          
+        await asyncio.sleep(60)
+
+asyncio.ensure_future(periodic(), loop=client.loop)
 
 coro = client.loop.create_server(SimpleServer, host='127.0.0.1', port=int(config['listen_port']) or 1234)
 server = client.loop.run_until_complete(coro)
