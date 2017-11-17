@@ -83,9 +83,11 @@ class SimpleServer(asyncio.Protocol):
                    vc = voice_clients[j['server_name']]
                    if not vc.is_connected():
                        logger.error("WTF dude, the voice client isn't connected, how could thishappen!")
+                       voice_clients[j['server_name']] = asyncio.async(client.join_voice_channel(v))
                    global stream_player
                    if stream_player is None or (stream_player is not None and not stream_player.is_playing()):
                        stream_player = vc.create_ffmpeg_player(full_path, after=self.done_stream)
+                       stream_player.vc = vc
                        stream_player.volume = 0.85
                        stream_player.start()
                    else:
@@ -101,6 +103,8 @@ class SimpleServer(asyncio.Protocol):
        if player.error is not None:
            logger.error("ERROR: " + str(player.error)) 
        logger.info("We are done playing the stream") 
+       asyncio.async(player.vc.disconnect())
+       voice_clients[player.vc.channel.server.name] = asyncio.async(client.join_voice_channel(player.vc.channel))
         
     def connection_lost(self, ex):
         clients.remove(self)
