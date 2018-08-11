@@ -9,26 +9,26 @@ from configobj import ConfigObj
 import logging
 import os
 
-pid = os.getpid()
-op = open("/var/run/platycomms.pid","w")
-op.write("%s" % pid)
-op.close()
+# pid = os.getpid()
+# op = open("/var/run/platycomms.pid","w")
+# op.write("%s" % pid)
+# op.close()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # create a file handler
-handler = logging.FileHandler('/var/log/platycomms.log')
-handler.setLevel(logging.INFO)
+# handler = logging.FileHandler('/var/log/platycomms.log')
+# handler.setLevel(logging.INFO)
+#
+# # create a logging format
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# handler.setFormatter(formatter)
+#
+# # add the handlers to the logger
+# logger.addHandler(handler)
 
-# create a logging format
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-# add the handlers to the logger
-logger.addHandler(handler)
-
-config = ConfigObj("/home/stevemulligan/platycomms.env")
+config = ConfigObj(".env")
 
 if not discord.opus.is_loaded():
     # the 'opus' library here is opus.dll on windows
@@ -53,8 +53,16 @@ async def on_ready():
         channels = g.voice_channels
         for channel in channels:
             if channel.name == config['channel_name']:
-                #voice_clients[channel.guild.name] = await discord.VoiceChannel.connect(channel)
-                voice_channels[channel.guild.name] = channel
+                members = channel.members
+                in_channel = False
+                for m in members:
+                    if m.name == config['member_name']:
+                        in_channel = True
+                        break
+
+                if in_channel:
+                    voice_clients[channel.guild.name] = await discord.VoiceChannel.connect(channel)
+                    voice_channels[channel.guild.name] = channel
 
 async def join_channel(server_name, channel):
     voice_clients[server_name] = await client.join_voice_channel(channel)
@@ -72,14 +80,12 @@ def get_voice_channel(voice_channel_name):
 
 @client.event
 async def on_voice_state_update(member, before, after):
-    logger.info("on_voice_state_update")
-    logger.info("member: " + member.name)
     if member.name == config['member_name']:
-        logger.info("before channel: " + before.channel.name)
         if (before.channel is not None and after.channel is not None):
             if (before.channel.name != config['channel_name'] and after.channel.name == config['channel_name']):
                logger.info("joined")
-               voice_clients[after.channel.guild.name] = await discord.VoiceClient.connect(get_voice_channel(after.channel.name))
+               c = get_voice_channel(after.channel.name)
+               voice_clients[after.channel.guild.name] = await discord.VoiceChannel.connect(c)
             elif (before.channel.name == config['channel_name'] and after.channel.name != config['channel_name']):
                logger.info("left")
                vc = voice_clients[before.channel.guild.name]
@@ -87,13 +93,13 @@ async def on_voice_state_update(member, before, after):
                voice_clients[before.channel.guild.name] = None
 
         if (before.channel is not None and before.channel.name == config['channel_name']) and (after.channel is None):
-           logger.info("left")
+           logger.info("left server")
            vc = voice_clients[before.channel.guild.name]
            await vc.disconnect()
            voice_clients[before.channel.guild.name] = None
         elif before.channel is None and (after.channel is not None and after.channel.name == config['channel_name']):
-           logger.info("joined")
-           voice_clients[after.channel.guild.name] = await discord.VoiceClient.connect(get_voice_channel(after.channel.name))
+           logger.info("joined server")
+           voice_clients[after.channel.guild.name] = await discord.VoiceChannel.connect(after.channel)
 
 class SimpleServer(asyncio.Protocol):
     def connection_made(self, transport):
