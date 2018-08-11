@@ -44,19 +44,56 @@ client = discord.Client()
 voice_clients = {}
 voice_channels = {}
 clients = []
-stream_player = None
 
 @client.event
 async def on_ready():
     logger.info('Logged in as %s/%s' % (client.user.name, client.user.id))
 
-    channels = client.get_all_channels()
-    for channel in channels:
-        if channel.type == ChannelType.voice:
+    for g in client.guilds:
+        channels = g.voice_channels
+        for channel in channels:
             if channel.name == config['channel_name']:
-                voice_clients[channel.server.name] = await client.join_voice_channel(channel)
-                voice_channels[channel.server.name] = channel
+                #voice_clients[channel.guild.name] = await discord.VoiceChannel.connect(channel)
+                voice_channels[channel.guild.name] = channel
 
+async def join_channel(server_name, channel):
+    voice_clients[server_name] = await client.join_voice_channel(channel)
+
+async def rejoin_channel(voice_channel):
+    await voice_channel.disconnect()
+    voice_clients[voice_channel.guild.name] = await client.join_voice_channel(voice_channel.channel)
+
+def get_voice_channel(voice_channel_name):
+    for g in client.guilds:
+        channels = g.voice_channels
+        for channel in channels:
+            if channel.name == voice_channel_name:
+                return channel
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    logger.info("on_voice_state_update")
+    logger.info("member: " + member.name)
+    if member.name == config['member_name']:
+        logger.info("before channel: " + before.channel.name)
+        if (before.channel is not None and after.channel is not None):
+            if (before.channel.name != config['channel_name'] and after.channel.name == config['channel_name']):
+               logger.info("joined")
+               voice_clients[after.channel.guild.name] = await discord.VoiceClient.connect(get_voice_channel(after.channel.name))
+            elif (before.channel.name == config['channel_name'] and after.channel.name != config['channel_name']):
+               logger.info("left")
+               vc = voice_clients[before.channel.guild.name]
+               await vc.disconnect()
+               voice_clients[before.channel.guild.name] = None
+
+        if (before.channel is not None and before.channel.name == config['channel_name']) and (after.channel is None):
+           logger.info("left")
+           vc = voice_clients[before.channel.guild.name]
+           await vc.disconnect()
+           voice_clients[before.channel.guild.name] = None
+        elif before.channel is None and (after.channel is not None and after.channel.name == config['channel_name']):
+           logger.info("joined")
+           voice_clients[after.channel.guild.name] = await discord.VoiceClient.connect(get_voice_channel(after.channel.name))
 
 class SimpleServer(asyncio.Protocol):
     def connection_made(self, transport):
@@ -69,7 +106,7 @@ class SimpleServer(asyncio.Protocol):
         j = json.loads(data.decode())
         if j['secret_key'] == config['secret_key']:
             v = voice_channels[j['server_name']]
-            members = v.voice_members
+            members = v.members
             in_channel = False
             for m in members:
                 if m.name == j['player_name']:
@@ -83,13 +120,9 @@ class SimpleServer(asyncio.Protocol):
                    vc = voice_clients[j['server_name']]
                    if not vc.is_connected():
                        logger.error("WTF dude, the voice client isn't connected, how could thishappen!")
-                       voice_clients[j['server_name']] = asyncio.async(client.join_voice_channel(v))
-                   global stream_player
-                   if stream_player is None or (stream_player is not None and not stream_player.is_playing()):
-                       stream_player = vc.create_ffmpeg_player(full_path, after=self.done_stream)
-                       stream_player.vc = vc
-                       stream_player.volume = 0.85
-                       stream_player.start()
+                       #client.loop.create_task(join_channel(j['server_name'], v))
+                   if not vc.is_playing():
+                       vc.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(full_path), volume=0.5), after = self.done_stream)
                    else:
                        logger.info("Not playing, already busy")
                 else:
@@ -103,8 +136,7 @@ class SimpleServer(asyncio.Protocol):
        if player.error is not None:
            logger.error("ERROR: " + str(player.error)) 
        logger.info("We are done playing the stream") 
-       asyncio.async(player.vc.disconnect())
-       voice_clients[player.vc.channel.server.name] = asyncio.async(client.join_voice_channel(player.vc.channel))
+       #client.loop.create_task(rejoin_channel(player.vc))
         
     def connection_lost(self, ex):
         clients.remove(self)
@@ -118,7 +150,7 @@ async def periodic():
           
         await asyncio.sleep(60)
 
-asyncio.ensure_future(periodic(), loop=client.loop)
+#asyncio.ensure_future(periodic(), loop=client.loop)
 
 coro = client.loop.create_server(SimpleServer, host='127.0.0.1', port=int(config['listen_port']) or 1234)
 server = client.loop.run_until_complete(coro)
